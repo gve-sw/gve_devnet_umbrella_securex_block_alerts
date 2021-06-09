@@ -1,0 +1,749 @@
+{
+  "workflow": {
+    "unique_name": "definition_workflow_01NP8PBH8AVU41r2Ozfx1TaFs8ZJ4TfCiTo",
+    "name": "SW Proj: Trial",
+    "title": "SW Proj: Trial",
+    "type": "generic.workflow",
+    "base_type": "workflow",
+    "variables": [
+      {
+        "schema_id": "datatype.secure_string",
+        "properties": {
+          "value": "*****",
+          "scope": "local",
+          "name": "Bot access token ",
+          "type": "datatype.secure_string",
+          "is_required": false,
+          "is_invisible": false
+        },
+        "unique_name": "variable_workflow_01O5I3FVPUDHR5hr8KgYOyu4D0qqkkf10Qa",
+        "object_type": "variable_workflow"
+      },
+      {
+        "schema_id": "datatype.secure_string",
+        "properties": {
+          "value": "*****",
+          "scope": "local",
+          "name": "Access token Vasant 2",
+          "type": "datatype.secure_string",
+          "is_required": false,
+          "is_invisible": false
+        },
+        "unique_name": "variable_workflow_01O5I0NTOVIPL6Pc7lCKNVqx0KKYURyRXdH",
+        "object_type": "variable_workflow"
+      },
+      {
+        "schema_id": "datatype.string",
+        "properties": {
+          "value": "https://23ac8faefd64.ngrok.io",
+          "scope": "local",
+          "name": "ngrok tunnel",
+          "type": "datatype.string",
+          "is_required": false,
+          "is_invisible": false
+        },
+        "unique_name": "variable_workflow_01OFOUSFF9VV97aZCKPLcYHzTmj1EiMhAdv",
+        "object_type": "variable_workflow"
+      }
+    ],
+    "properties": {
+      "atomic": {
+        "is_atomic": false
+      },
+      "delete_workflow_instance": false,
+      "display_name": "SW Proj: Trial",
+      "runtime_user": {
+        "override_target_runtime_user": false,
+        "specify_on_workflow_start": false,
+        "target_default": true
+      },
+      "target": {
+        "execute_on_target_group": false,
+        "execute_on_workflow_target": false,
+        "no_target": true,
+        "specify_on_workflow_start": false
+      }
+    },
+    "object_type": "definition_workflow",
+    "actions": [
+      {
+        "unique_name": "definition_activity_01NXSYYLCI7GG5ScRF8P0ppBEpH4rmHustD",
+        "name": "HTTP Request",
+        "title": "Authentication",
+        "type": "web-service.http_request",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "allow_auto_redirect": true,
+          "continue_on_error_status_code": false,
+          "continue_on_failure": false,
+          "display_name": "Authentication",
+          "method": "GET",
+          "relative_url": "/auth/v2/oauth2/token",
+          "runtime_user": {
+            "override_target_runtime_user": false,
+            "target_default": true
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01NXT8YQZVYLA3sqIBbs1WHS7jP6K5exuuR"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01NXTLVSD1VRD6P3Y8bkFDn5aZlo5xdS7eh",
+        "name": "JSONPath Query",
+        "title": "Get Bearer Token",
+        "type": "corejava.jsonpathquery",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "continue_on_failure": false,
+          "display_name": "Get Bearer Token",
+          "input_json": "$activity.definition_activity_01NXSYYLCI7GG5ScRF8P0ppBEpH4rmHustD.output.response_body$",
+          "jsonpath_queries": [
+            {
+              "jsonpath_query": "$.access_token",
+              "jsonpath_query_name": "BearerTOken",
+              "jsonpath_query_type": "string"
+            }
+          ],
+          "skip_execution": false
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01OD6OO5GA0JE26FbNAaGzrmEOeyzCVaXGl",
+        "name": "HTTP Request",
+        "title": "List all webhooks",
+        "type": "web-service.http_request",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "allow_auto_redirect": true,
+          "content_type": "application/json",
+          "continue_on_error_status_code": false,
+          "continue_on_failure": false,
+          "custom_headers": [
+            {
+              "name": "Authorization",
+              "value": "Bearer $workflow.definition_workflow_01NP8PBH8AVU41r2Ozfx1TaFs8ZJ4TfCiTo.local.variable_workflow_01O5I3FVPUDHR5hr8KgYOyu4D0qqkkf10Qa$"
+            }
+          ],
+          "display_name": "List all webhooks",
+          "method": "GET",
+          "relative_url": "/v1/webhooks",
+          "runtime_user": {
+            "target_default": true
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01IHU9MT4EXEI4tLUm8fz0LklTHc8sK15it"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01OFLBB7UUZHJ5gqARmZhLtgRwdxdeeISNS",
+        "name": "Execute Python Script",
+        "title": "Delete old webhooks",
+        "type": "python3.script",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "continue_on_failure": false,
+          "display_name": "Delete old webhooks",
+          "script": "import requests\nimport json\n\nwebhookListStr= ' $activity.definition_activity_01OD6OO5GA0JE26FbNAaGzrmEOeyzCVaXGl.output.response_body$ '\nprint(webhookListStr)\n\nwebhookListObj= json.loads(webhookListStr)\n\nwebhookList = webhookListObj['items']\n\nfor webhook in webhookList:\n    url = \"https://webexapis.com/v1/webhooks/\"+str(webhook['id'])\n    headers = {\"Accept\": \"*/*\", \"Authorization\":\"Bearer $workflow.definition_workflow_01NP8PBH8AVU41r2Ozfx1TaFs8ZJ4TfCiTo.local.variable_workflow_01O5I3FVPUDHR5hr8KgYOyu4D0qqkkf10Qa$\"}\n    response = requests.request(\"DELETE\", url, headers=headers)\n    print(response.text)\n\n",
+          "skip_execution": false
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01OFM3G559A7K0jcumB7lxcPkVvBCoi1YzJ",
+        "name": "HTTP Request",
+        "title": "Create a new Webhook",
+        "type": "web-service.http_request",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "allow_auto_redirect": true,
+          "body": "{\n  \"name\": \"Webex Notification Webhook\",\n  \"targetUrl\": \"https://23ac8faefd64.ngrok.io/JoshSWProject\",\n  \"resource\": \"attachmentActions\",\n  \"event\": \"created\"\n }",
+          "content_type": "application/json",
+          "continue_on_error_status_code": false,
+          "continue_on_failure": false,
+          "custom_headers": [
+            {
+              "name": "Authorization",
+              "value": "Bearer $workflow.definition_workflow_01NP8PBH8AVU41r2Ozfx1TaFs8ZJ4TfCiTo.local.variable_workflow_01O5I3FVPUDHR5hr8KgYOyu4D0qqkkf10Qa$"
+            }
+          ],
+          "display_name": "Create a new Webhook",
+          "method": "POST",
+          "relative_url": "/v1/webhooks",
+          "runtime_user": {
+            "target_default": true
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01IHU9MT4EXEI4tLUm8fz0LklTHc8sK15it"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01NXTGLDMQ8485GtTinqnaxl3pIjlkJf7Qj",
+        "name": "HTTP Request",
+        "title": "Get security activity",
+        "type": "web-service.http_request",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "allow_auto_redirect": true,
+          "continue_on_error_status_code": false,
+          "continue_on_failure": false,
+          "custom_headers": [
+            {
+              "name": "Authorization",
+              "value": "Bearer $activity.definition_activity_01NXTLVSD1VRD6P3Y8bkFDn5aZlo5xdS7eh.output.jsonpath_queries.BearerTOken$"
+            }
+          ],
+          "display_name": "Get security activity",
+          "method": "GET",
+          "relative_url": "/v2/organizations/5366248/activity?from=-10days\u0026to=now\u0026limit=50",
+          "runtime_user": {
+            "target_default": true
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01NXT6OBZHGBM14SzYHshWpu1NGENyi5xgi"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01O13ER8EYCW11APfzeXOKJqrZp7yCnnv5F",
+        "name": "Execute Python Script",
+        "title": "Get all the blocked domains and violating devices",
+        "type": "python3.script",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "continue_on_failure": false,
+          "display_name": "Get all the blocked domains and violating devices",
+          "script": "import json\n\njson_str = ' $activity.definition_activity_01NXTGLDMQ8485GtTinqnaxl3pIjlkJf7Qj.output.response_body$'\n\njson_obj = json.loads(json_str)\n\nprint(json_obj)\n\ndata = json_obj['data']\n\n\n\nblockedlist_array = []\n\nfor element in data:\n        if element['verdict'] == 'blocked'  and len(blockedlist_array)!=0 :\n            for blockedelement in blockedlist_array:\n               if blockedelement['domain'] != element['domain'] and  blockedelement['timestamp'] != element['timestamp']:\n                 blockedlist_array.append(element)\n        elif element['verdict'] == 'blocked' :\n             blockedlist_array.append(element)\n        else:\n            print(\"Hi why are we here\")\n\n    \n\nblockedlist_array_JSON = json.dumps(blockedlist_array,indent=4, sort_keys=True)\n\nprint(blockedlist_array_JSON)\n\n\n\nnotification_array = list()\n\nfor element in blockedlist_array:\n    ids = list()\n    policies = list()\n    for id in element['identities']:\n           label = id['label']\n           ids.append(label)\n    for cats in element['policycategories']:\n        label = cats['label']\n        policies.append(label)\n    notificatication_info = {\n         \"date\" : element['date'],\n         \"domain\" :element['domain'],\n         \"device\" : ids,\n         \"connection_type\" : element['type'],\n         \"policy_category\" :  policies \n         } \n    notification_array.append(notificatication_info)\n\nnotification_array_json = json.dumps(notification_array)\n\nfor el in notification_array:\n    print(\"HEYYYYY.  \",el)",
+          "script_queries": [
+            {
+              "script_query": "blockedlist_array",
+              "script_query_name": "Array of Policy Violations",
+              "script_query_type": "string"
+            },
+            {
+              "script_query": "blockedlist_array_JSON",
+              "script_query_name": "Array of Policy Violations JSON",
+              "script_query_type": "string"
+            },
+            {
+              "script_query": "notification_array_json",
+              "script_query_name": "notification_array",
+              "script_query_type": "string"
+            }
+          ],
+          "skip_execution": false
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01O6CJ0QF1VQV1W8PG6xoYejM6o2Of7uJku",
+        "name": "Execute Python Script",
+        "title": "Create message string",
+        "type": "python3.script",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "continue_on_failure": false,
+          "display_name": "Create message string",
+          "script": "import json\n\nnotification_json = '$activity.definition_activity_01O13ER8EYCW11APfzeXOKJqrZp7yCnnv5F.output.script_queries.notification_array$'\n\nprint(notification_json)\n\n\nif len(notification_json) != 0 :\n    element = json.loads(notification_json)[0]\n    date = element['date']\n    domain = element['domain']\n    device = str(element['device'])\n    msg = \"On \"+ element['date']+\" the device \"+str(element['device'])+\" tried to connect \" +element['domain']+\" through \"+ element['connection_type']+\" category: \"+str(element['policy_category'])+\"\\n\"\n\nelse:\n    msg=\"Everything's algud\"\n",
+          "script_queries": [
+            {
+              "script_query": "msg",
+              "script_query_name": "message",
+              "script_query_type": "string"
+            },
+            {
+              "script_query": "date",
+              "script_query_name": "date",
+              "script_query_type": "string"
+            },
+            {
+              "script_query": "domain",
+              "script_query_name": "domain",
+              "script_query_type": "string"
+            },
+            {
+              "script_query": "device",
+              "script_query_name": "device",
+              "script_query_type": "string"
+            }
+          ],
+          "skip_execution": false
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01O8RWMGDT6MD242dW5xUD0XWdgLvnm5ZW7",
+        "name": "Replace String",
+        "title": "Format message for HTTP Request",
+        "type": "core.replacestring",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "Format message for HTTP Request",
+          "input_string": "$activity.definition_activity_01O6CJ0QF1VQV1W8PG6xoYejM6o2Of7uJku.output.script_queries.message$",
+          "replace_list": [
+            {
+              "replaced_string": "\"",
+              "replacement_string": "\\\""
+            },
+            {
+              "replaced_string": "\n",
+              "replacement_string": "\\n"
+            }
+          ],
+          "skip_execution": false
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01O8PRLY1RHA80HMBcfKp599vovfmlNrH7i",
+        "name": "HTTP Request",
+        "title": "Card message",
+        "type": "web-service.http_request",
+        "base_type": "activity",
+        "properties": {
+          "accept": "application/json",
+          "action_timeout": 180,
+          "allow_auto_redirect": true,
+          "body": "{\n  \"roomId\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNmQxNzYwMTAtYWFmNS0xMWViLTkxN2QtYWJkYWVlNDM2NDM3\",\n  \"text\": \"hi\",\n  \"attachments\": [\n    {\n      \"contentType\": \"application/vnd.microsoft.card.adaptive\",\n      \"content\": {\n        \"$schema\": \"http://adaptivecards.io/schemas/adaptive-card.json\",\n        \"type\": \"AdaptiveCard\",\n        \"version\": \"1.0\",\n        \"body\": [\n        {\n            \"type\": \"ColumnSet\",\n            \"columns\": [\n                {\n                    \"type\": \"Column\",\n                    \"items\": [\n                        {\n                            \"type\": \"Image\",\n                            \"style\": \"Person\",\n                            \"url\": \"https://www.cisco.com/c/dam/assets/dmr/1off/reimagine-pilots/securex/images/securex-in-action.png\",\n                            \"size\": \"Medium\",\n                            \"height\": \"50px\"\n                        }\n                    ],\n                    \"width\": \"auto\"\n                },\n                {\n                    \"type\": \"Column\",\n                    \"items\": [\n                        {\n                            \"type\": \"TextBlock\",\n                            \"text\": \"SecureX Monitoring Workflow\",\n                            \"weight\": \"Lighter\",\n                            \"color\": \"Accent\"\n                        },\n                        {\n                            \"type\": \"TextBlock\",\n                            \"weight\": \"Bolder\",\n                            \"text\": \"Umbrella Notification Bot\",\n                            \"wrap\": true,\n                            \"color\": \"Light\",\n                            \"size\": \"Large\",\n                            \"spacing\": \"Small\"\n                        }\n                    ],\n                    \"width\": \"stretch\"\n                }\n            ]\n        },\n        {\n            \"type\": \"ColumnSet\",\n            \"columns\": [\n                {\n                    \"type\": \"Column\",\n                    \"width\": 35,\n                    \"items\": [\n                        {\n                            \"type\": \"TextBlock\",\n                            \"text\": \"Date:\",\n                            \"color\": \"Light\"\n                        },\n                        {\n                            \"type\": \"TextBlock\",\n                            \"text\": \"Domain:\",\n                            \"weight\": \"Lighter\",\n                            \"color\": \"Light\",\n                            \"spacing\": \"Small\"\n                        },\n                        {\n                            \"type\": \"TextBlock\",\n                            \"text\": \"Device:\",\n                            \"weight\": \"Lighter\",\n                            \"color\": \"Light\",\n                            \"spacing\": \"Small\"\n                        }\n                    ]\n                },\n                {\n                    \"type\": \"Column\",\n                    \"width\": 65,\n                    \"items\": [\n                        {\n                            \"type\": \"TextBlock\",\n                            \"text\": \"$activity.definition_activity_01O6CJ0QF1VQV1W8PG6xoYejM6o2Of7uJku.output.script_queries.date$\",\n                            \"color\": \"Light\"\n                        },\n                        {\n                            \"type\": \"TextBlock\",\n                            \"text\": \"$activity.definition_activity_01O6CJ0QF1VQV1W8PG6xoYejM6o2Of7uJku.output.script_queries.domain$\",\n                            \"color\": \"Light\",\n                            \"spacing\": \"Small\"\n                        },\n                        {\n                            \"type\": \"TextBlock\",\n                            \"text\": \"$activity.definition_activity_01O6CJ0QF1VQV1W8PG6xoYejM6o2Of7uJku.output.script_queries.device$\",\n                            \"color\": \"Light\",\n                            \"spacing\": \"Small\"\n                        }\n                    ]\n                }\n            ],\n            \"spacing\": \"Padding\",\n            \"horizontalAlignment\": \"Center\"\n        },\n        {\n            \"type\": \"TextBlock\",\n            \"text\": \"$activity.definition_activity_01O8RWMGDT6MD242dW5xUD0XWdgLvnm5ZW7.output.result_string$\",\n            \"wrap\": true\n        },\n        {\n            \"type\": \"TextBlock\",\n            \"text\": \"Buttons and Cards Resources:\"\n        },\n        {\n            \"type\": \"ColumnSet\",\n            \"columns\": [\n                {\n                    \"type\": \"Column\",\n                    \"width\": \"auto\",\n                    \"items\": [\n                        {\n                            \"type\": \"Image\",\n                            \"altText\": \"\",\n                            \"url\": \"https://developer.webex.com/images/link-icon.png\",\n                            \"size\": \"Small\",\n                            \"width\": \"30px\"\n                        }\n                    ],\n                    \"spacing\": \"Small\"\n                },\n                {\n                    \"type\": \"Column\",\n                    \"width\": \"auto\",\n                    \"items\": [\n                        {\n                            \"type\": \"TextBlock\",\n                            \"text\": \"[Check incident in Umbrella]()\",\n                            \"size\": \"Medium\"\n                        }\n                    ],\n                    \"verticalContentAlignment\": \"Center\",\n                    \"spacing\": \"Small\"\n                }\n            ]\n        },\n         {\n            \"type\": \"ActionSet\",\n            \"actions\": [\n                {\n                    \"type\": \"Action.Submit\",\n                    \"title\": \"Take action to remediate\",\n                    \"data\": {\n                        \"subscribe\": \"true\"\n                    }\n                }\n            ],\n            \"horizontalAlignment\": \"Left\",\n            \"spacing\": \"None\"\n        }\n        ]\n      }\n    }\n  ]\n}",
+          "content_type": "application/json",
+          "continue_on_error_status_code": false,
+          "continue_on_failure": false,
+          "custom_headers": [
+            {
+              "name": "Authorization",
+              "value": "Bearer  $workflow.definition_workflow_01NP8PBH8AVU41r2Ozfx1TaFs8ZJ4TfCiTo.local.variable_workflow_01O5I3FVPUDHR5hr8KgYOyu4D0qqkkf10Qa$"
+            }
+          ],
+          "display_name": "Card message",
+          "method": "POST",
+          "relative_url": "/v1/messages",
+          "runtime_user": {
+            "override_target_runtime_user": false,
+            "target_default": true
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01IHU9MT4EXEI4tLUm8fz0LklTHc8sK15it"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01OFMPJAJRJYO4vQSWSpwFOvUGGgxERyBaB",
+        "name": "HTTP Request",
+        "title": "Should we remediate?",
+        "type": "web-service.http_request",
+        "base_type": "activity",
+        "properties": {
+          "action_timeout": 180,
+          "allow_auto_redirect": true,
+          "continue_on_error_status_code": false,
+          "continue_on_failure": false,
+          "display_name": "Should we remediate?",
+          "method": "POST",
+          "relative_url": "/ToSecureX",
+          "runtime_user": {
+            "override_target_runtime_user": false,
+            "target_default": true
+          },
+          "skip_execution": false,
+          "target": {
+            "override_workflow_target": true,
+            "target_id": "definition_target_01OFMRLSPOJHG2XHpc6HYyAncZRPUz6rwE6"
+          }
+        },
+        "object_type": "definition_activity"
+      },
+      {
+        "unique_name": "definition_activity_01OFMTU84GAIM3gnk7RUI5L2wuB59MDKx17",
+        "name": "Condition Block",
+        "title": "Remediation Decision",
+        "type": "logic.if_else",
+        "base_type": "activity",
+        "properties": {
+          "continue_on_failure": false,
+          "display_name": "Remediation Decision",
+          "skip_execution": false
+        },
+        "object_type": "definition_activity",
+        "blocks": [
+          {
+            "unique_name": "definition_activity_01OFMTUCOXQHY0aJNC1ScjsYYW35wokpgg6",
+            "name": "Condition Branch",
+            "title": "Admin wants to remediate",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01OFMPJAJRJYO4vQSWSpwFOvUGGgxERyBaB.output.response_body$",
+                "operator": "eq",
+                "right_operand": "\"yes\""
+              },
+              "continue_on_failure": false,
+              "display_name": "Admin wants to remediate",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01O1X3GQV85UK0TkdZl5MXpqrBV2ZrmK9LM",
+                "name": "HTTP Request",
+                "title": "Get List of Policies",
+                "type": "web-service.http_request",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "allow_auto_redirect": true,
+                  "continue_on_error_status_code": false,
+                  "continue_on_failure": false,
+                  "display_name": "Get List of Policies",
+                  "method": "GET",
+                  "relative_url": "/v1/organizations/5366248/policies",
+                  "runtime_user": {
+                    "override_target_runtime_user": true,
+                    "runtime_user_id": "definition_runtime_user_01O1Y3KND0EMP70pkY2zt4J0S6hwqNU7nDq"
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01O14QPP1R7Y54NumOY4dNklNHbOJkleR1P"
+                  }
+                },
+                "object_type": "definition_activity"
+              },
+              {
+                "unique_name": "definition_activity_01O1Y7DBBUK0W34eAq4ruL1m71mdiIboLxF",
+                "name": "Execute Python Script",
+                "title": "Get the most restrictive Policy",
+                "type": "python3.script",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "continue_on_failure": false,
+                  "display_name": "Get the most restrictive Policy",
+                  "script": "import json\njson_str = '$activity.definition_activity_01O1X3GQV85UK0TkdZl5MXpqrBV2ZrmK9LM.output.response_body$'\npolicies_obj = json.loads(json_str)\n\nfor policy in policies_obj:\n       if policy['priority'] == 0 : \n           mostRestrictivePolicyID = policy['policyId']\n\nprint(mostRestrictivePolicyID)\n",
+                  "script_queries": [
+                    {
+                      "script_query": "mostRestrictivePolicyID",
+                      "script_query_name": "mostRestrictivePolicyID",
+                      "script_query_type": "string"
+                    }
+                  ],
+                  "skip_execution": false
+                },
+                "object_type": "definition_activity"
+              },
+              {
+                "unique_name": "definition_activity_01O1YTBJ07NAK4ELyY2dmd05mLlk5ImKlOL",
+                "name": "Execute Python Script",
+                "title": "Add violating devices to most restrictive policy",
+                "type": "python3.script",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "continue_on_failure": false,
+                  "display_name": "Add violating devices to most restrictive policy",
+                  "script": "import requests\n\npolicyID =  $activity.definition_activity_01O1Y7DBBUK0W34eAq4ruL1m71mdiIboLxF.output.script_queries.mostRestrictivePolicyID$\n\nblockedRequests =  $activity.definition_activity_01O13ER8EYCW11APfzeXOKJqrZp7yCnnv5F.output.script_queries.Array of Policy Violations$\n\n\nfor items in blockedRequests :\n   for  devices in items['identities']:\n      #print(devices['id'])\n        originID = devices['id']\n        url = \"https://management.api.umbrella.com/v1/organizations/5366248/policies/\"+str(policyID)+\"/identities/\"+str(originID)\n        headers = {\"Accept\": \"*/*\", \"Authorization\":\"Basic MmQyZTdmOTllZTJhNGRmMDhiZjc2OTJiNjNkZjc3Y2I6MDdmYjdjZjc1NjdiNGZmNmE5ODcwZGE4ZmZmZjcxYWU=\"}\n        response = requests.request(\"PUT\", url, headers=headers)\n        print(response.text)",
+                  "skip_execution": false
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          },
+          {
+            "unique_name": "definition_activity_01OFMTUDC6SG37jw5NQaTPY78IAiCFJMEvs",
+            "name": "Condition Branch",
+            "title": "Admin is kind",
+            "type": "logic.condition_block",
+            "base_type": "activity",
+            "properties": {
+              "condition": {
+                "left_operand": "$activity.definition_activity_01OFMPJAJRJYO4vQSWSpwFOvUGGgxERyBaB.output.response_body$",
+                "operator": "eq",
+                "right_operand": "\"no\""
+              },
+              "continue_on_failure": false,
+              "display_name": "Admin is kind",
+              "skip_execution": false
+            },
+            "object_type": "definition_activity",
+            "actions": [
+              {
+                "unique_name": "definition_activity_01OFPXNCD7NSL2YBgu7qquTww3Bb1JF9Mhu",
+                "name": "Execute Python Script",
+                "title": "Testing",
+                "type": "python3.script",
+                "base_type": "activity",
+                "properties": {
+                  "action_timeout": 180,
+                  "continue_on_failure": false,
+                  "display_name": "Testing",
+                  "script": "print(\"Heyyyy\")",
+                  "script_queries": [
+                    {
+                      "script_query": "mostRestrictivePolicyID",
+                      "script_query_name": "mostRestrictivePolicyID",
+                      "script_query_type": "string"
+                    }
+                  ],
+                  "skip_execution": false
+                },
+                "object_type": "definition_activity"
+              },
+              {
+                "unique_name": "definition_activity_01O5HO2YO5PKS63cJU7qSy9K0HlGNcQvyJU",
+                "name": "Webex Teams - Post Message to Room",
+                "title": "Webex Teams - Post Message to Room",
+                "type": "workflow.atomic_workflow",
+                "base_type": "subworkflow",
+                "properties": {
+                  "continue_on_failure": false,
+                  "display_name": "Webex Teams - Post Message to Room",
+                  "input": {
+                    "variable_workflow_01FGYY44G3MZ55amJu9YqgUeKS8GT49bZx3": "$workflow.definition_workflow_01NP8PBH8AVU41r2Ozfx1TaFs8ZJ4TfCiTo.local.variable_workflow_01O5I3FVPUDHR5hr8KgYOyu4D0qqkkf10Qa$",
+                    "variable_workflow_01FGYY44G3TK951Crpnd8g2izonyM4bFtpW": "Y2lzY29zcGFyazovL3VzL1JPT00vNmQxNzYwMTAtYWFmNS0xMWViLTkxN2QtYWJkYWVlNDM2NDM3",
+                    "variable_workflow_01FGYY44G3UPV3heGGc3vXCV47YL5WoI2X6": "",
+                    "variable_workflow_01FGYZ9BV4QTP19CuMwcW8QywvCP9ymx2BZ": "No remediation taken"
+                  },
+                  "runtime_user": {
+                    "target_default": true
+                  },
+                  "skip_execution": false,
+                  "target": {
+                    "override_workflow_target": true,
+                    "target_id": "definition_target_01IHU9MT4EXEI4tLUm8fz0LklTHc8sK15it",
+                    "target_type": "web-service.endpoint"
+                  },
+                  "workflow_id": "definition_workflow_01FGYY44YU521254ygN3Le0In0kEHpiPNpf"
+                },
+                "object_type": "definition_activity"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "categories": [
+      "category_1BMfMXSnJMyt5Ihqi7rWJr5N8cf"
+    ]
+  },
+  "triggers": {
+    "triggerschedule_01O2A1TI4TT4T5fDg2Luh0BfRlNlkodHUPd": {
+      "workflow_id": "definition_workflow_01NP8PBH8AVU41r2Ozfx1TaFs8ZJ4TfCiTo",
+      "name": "Schedule for_SW Proj: Trial",
+      "title": "",
+      "lowercase_name": "schedule.schedule_for_sw_proj:_trial",
+      "type": "schedule",
+      "base_type": "trigger",
+      "ref_id": "schedule_01O2A17XBENKD7PGTfmeAwwllNpd21LTZER",
+      "version": "1.0.0",
+      "disabled": false,
+      "unique_name": "triggerschedule_01O2A1TI4TT4T5fDg2Luh0BfRlNlkodHUPd",
+      "object_type": "triggerschedule"
+    }
+  },
+  "schedules": {
+    "schedule_01O2A17XBENKD7PGTfmeAwwllNpd21LTZER": {
+      "unique_name": "schedule_01O2A17XBENKD7PGTfmeAwwllNpd21LTZER",
+      "name": "Schedule for_SW Proj: Trial",
+      "type": "basic.schedule",
+      "base_type": "schedule",
+      "properties": {
+        "calendar": "calendar_group_01O29Y75CCWBE5JowyP7w9SZu3g5UXgWHF0",
+        "timezone": "Asia/Kuala_Lumpur",
+        "starttime": "00:00",
+        "interval_hours": 0,
+        "interval_minutes": 1,
+        "number_of_times": 1440,
+        "display_name": "Schedule for_SW Proj: Trial",
+        "description": ""
+      },
+      "version": "1.0.0",
+      "object_type": "schedule"
+    }
+  },
+  "calendars": {
+    "calendar_group_01O29Y75CCWBE5JowyP7w9SZu3g5UXgWHF0": {
+      "unique_name": "calendar_group_01O29Y75CCWBE5JowyP7w9SZu3g5UXgWHF0",
+      "name": "SW Proj: Trial",
+      "title": "SW Proj: Trial",
+      "description": "From 04/28/21 to 05/14/21, only weekdays.",
+      "base_type": "calendar",
+      "type": "calendar.group",
+      "properties": {
+        "calendar_exclude": [
+          "calendar_recurring_1BMfMviA3g4f1iDN74e6ytY2iuI"
+        ],
+        "calendar_include": [
+          "calendar_recurring_1BMfMwZ4tmMYLJBxY4PFZf0e377"
+        ],
+        "date_range": {
+          "end_date": "2021-05-14",
+          "start_date": "2021-04-28"
+        }
+      },
+      "version": "1.0.0",
+      "object_type": "calendar_group"
+    }
+  },
+  "targets": {
+    "definition_target_01IHU9MT4EXEI4tLUm8fz0LklTHc8sK15it": {
+      "unique_name": "definition_target_01IHU9MT4EXEI4tLUm8fz0LklTHc8sK15it",
+      "name": "Webex Teams",
+      "title": "Webex Teams",
+      "type": "web-service.endpoint",
+      "base_type": "target",
+      "object_type": "definition_target",
+      "properties": {
+        "description": "Webex Teams",
+        "disable_certificate_validation": false,
+        "display_name": "Webex Teams",
+        "host": "webexapis.com",
+        "no_runtime_user": true,
+        "port": 443,
+        "protocol": "https"
+      }
+    },
+    "definition_target_01NXT6OBZHGBM14SzYHshWpu1NGENyi5xgi": {
+      "unique_name": "definition_target_01NXT6OBZHGBM14SzYHshWpu1NGENyi5xgi",
+      "name": "Umbrella_Reports",
+      "title": "Umbrella_Reports",
+      "type": "web-service.endpoint",
+      "base_type": "target",
+      "object_type": "definition_target",
+      "properties": {
+        "disable_certificate_validation": false,
+        "display_name": "Umbrella_Reports",
+        "host": "reports.api.umbrella.com",
+        "ignore_proxy": false,
+        "no_runtime_user": true,
+        "protocol": "https"
+      }
+    },
+    "definition_target_01NXT8YQZVYLA3sqIBbs1WHS7jP6K5exuuR": {
+      "unique_name": "definition_target_01NXT8YQZVYLA3sqIBbs1WHS7jP6K5exuuR",
+      "name": "Umbrella Proj",
+      "title": "Umbrella Proj",
+      "type": "web-service.endpoint",
+      "base_type": "target",
+      "object_type": "definition_target",
+      "properties": {
+        "default_runtime_user_id": "definition_runtime_user_01NXT3HETFXY55nVXh2YAMBsui9t4nRAhot",
+        "disable_certificate_validation": false,
+        "display_name": "Umbrella Proj",
+        "host": "management.api.umbrella.com",
+        "ignore_proxy": false,
+        "no_runtime_user": false,
+        "protocol": "https"
+      }
+    },
+    "definition_target_01O14QPP1R7Y54NumOY4dNklNHbOJkleR1P": {
+      "unique_name": "definition_target_01O14QPP1R7Y54NumOY4dNklNHbOJkleR1P",
+      "name": "Umbrella_Management",
+      "title": "Umbrella_Management",
+      "type": "web-service.endpoint",
+      "base_type": "target",
+      "object_type": "definition_target",
+      "properties": {
+        "default_runtime_user_id": "definition_runtime_user_01O14OJ0ZC9PY4OnFJ5Fa3Yk8X6vggEDNjM",
+        "description": "DevNet APJC Challenge-Auth endpoint",
+        "disable_certificate_validation": false,
+        "display_name": "Umbrella_Management",
+        "host": "management.api.umbrella.com",
+        "ignore_proxy": false,
+        "no_runtime_user": false,
+        "protocol": "https"
+      }
+    },
+    "definition_target_01OFMRLSPOJHG2XHpc6HYyAncZRPUz6rwE6": {
+      "unique_name": "definition_target_01OFMRLSPOJHG2XHpc6HYyAncZRPUz6rwE6",
+      "name": "ToRemediate?",
+      "title": "ToRemediate?",
+      "type": "web-service.endpoint",
+      "base_type": "target",
+      "object_type": "definition_target",
+      "properties": {
+        "disable_certificate_validation": false,
+        "display_name": "ToRemediate?",
+        "host": "23ac8faefd64.ngrok.io",
+        "ignore_proxy": false,
+        "no_runtime_user": true,
+        "protocol": "https"
+      }
+    }
+  },
+  "runtime_users": {
+    "definition_runtime_user_01NXT3HETFXY55nVXh2YAMBsui9t4nRAhot": {
+      "unique_name": "definition_runtime_user_01NXT3HETFXY55nVXh2YAMBsui9t4nRAhot",
+      "name": "Umbrella_Report",
+      "title": "Umbrella_Report",
+      "type": "runtime_user.web-service_basic_credentials",
+      "base_type": "runtime_user",
+      "object_type": "definition_runtime_user",
+      "properties": {
+        "auth_option": "*****",
+        "basic_password": "*****",
+        "basic_username": "*****",
+        "display_name": "Umbrella_Report"
+      }
+    },
+    "definition_runtime_user_01O14OJ0ZC9PY4OnFJ5Fa3Yk8X6vggEDNjM": {
+      "unique_name": "definition_runtime_user_01O14OJ0ZC9PY4OnFJ5Fa3Yk8X6vggEDNjM",
+      "name": "042321_Umberlla",
+      "title": "042321_Umberlla",
+      "type": "runtime_user.web-service_basic_credentials",
+      "base_type": "runtime_user",
+      "object_type": "definition_runtime_user",
+      "properties": {
+        "auth_option": "*****",
+        "basic_password": "*****",
+        "basic_username": "*****",
+        "description": "DevNet APJC Challenge-Umbrella keys",
+        "display_name": "042321_Umberlla"
+      }
+    },
+    "definition_runtime_user_01O1Y3KND0EMP70pkY2zt4J0S6hwqNU7nDq": {
+      "unique_name": "definition_runtime_user_01O1Y3KND0EMP70pkY2zt4J0S6hwqNU7nDq",
+      "name": "Umbrella_NetworkDevices",
+      "title": "Umbrella_NetworkDevices",
+      "type": "runtime_user.web-service_basic_credentials",
+      "base_type": "runtime_user",
+      "object_type": "definition_runtime_user",
+      "properties": {
+        "auth_option": "*****",
+        "basic_password": "*****",
+        "basic_username": "*****",
+        "description": "Used for Policy APIs and Network Devices API",
+        "display_name": "Umbrella_NetworkDevices"
+      }
+    }
+  },
+  "atomic_workflows": [
+    "definition_workflow_01FGYY44YU521254ygN3Le0In0kEHpiPNpf"
+  ]
+}
